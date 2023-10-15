@@ -21,8 +21,8 @@ public class NetworkPacket
 
 public static class NetworkManager
 {
-    public static int delayMin = 20;
-    public static int delayMax = 50;
+    public static int delayMin = 10; // one-way
+    public static int delayMax = 50; // one-way
     private static System.Random random = new();
     private static Dictionary<int, Action<NetworkPacket>> callback = new();
     private static Dictionary<Tuple<int, int>, Queue<InternalPacket>> packetQueue = new();
@@ -48,8 +48,19 @@ public static class NetworkManager
     }
     private static Queue<InternalPacket> GetQueue(NetworkPacket packet) => GetQueue(packet.src, packet.dst);
 
-    public static void Send(NetworkPacket packet, int delay = 0)
+    public static void Send(NetworkPacket packet)
     {
+        MainModule.CollectSendInfo(packet);
+        
+        int delay = 0;
+        if (packet.src == 2 && MainModule.Instance.LateCommit)
+        {
+            delay = MainModule.Instance.LateCommitDelay;
+        }
+        else if (packet.src == 3)
+        {
+            delay = MainModule.Instance.BadOneWayLatency;
+        }
         if (packet.dst != 0 && packet.src != 0)
         {
             Debug.LogError("invalid operation!");
@@ -90,6 +101,7 @@ public static class NetworkManager
             {
                 queue.Dequeue();
                 callback[packet.load.dst](packet.load);
+                MainModule.CollectRecvInfo(packet.load);
             }
         }
     }

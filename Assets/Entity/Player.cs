@@ -35,7 +35,7 @@ public static class Manager
             if(dst.playerDict.TryGetValue(remote_player.id, out var localPlayer))
             {
                 localPlayer.CopyFrom(remote_player);
-                localPlayer.frame = src.frame;
+                // localPlayer.frame = src.frame;
             }
             else
             {
@@ -100,6 +100,7 @@ public class Player
     public float radius = 0.5f;
     public int hp = 100;
     public Instruction inst;
+    private World world;
     
     public class Instruction
     {
@@ -113,14 +114,16 @@ public class Player
     
     private Player() { }
     
-    public Player(int id)
+    public Player(int id, World world)
     {
         this.id = id;
+        this.world = world;
     }
     
     public Player(Player src)
     {
         id = src.id;
+        world = src.world;
         this.CopyFrom(src);
     }
 
@@ -137,8 +140,12 @@ public class Player
     
     public void Update()
     {
-        frame++;
         UpdatePos();
+        
+        if (id == 1 && this.CollideWith(world[2]))
+        {
+            hp = 0;
+        }
     }
 
     public void UpdatePos()

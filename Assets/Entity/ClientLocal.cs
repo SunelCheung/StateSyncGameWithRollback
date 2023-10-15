@@ -13,17 +13,17 @@ public class ClientLocal
     public int ping;
     public World world = new();
     public Dictionary<int, Player.Instruction> unack_inst = new();
-    public Player localPlayer = new(0);
+    public Player localPlayer;
     public int last_sent_pkg_id;
     public int currentFrame;
     private int last_ack_frame;
 
-    private bool suppress_correct => MainModule.Instance.LateCommit && id == 2;
     // private bool fast_rate => MainModule.Instance.FastRate && id == 2;
 
     public ClientLocal(int id)
     {
         this.id = id;
+        localPlayer = new(0, world);
         NetworkManager.RegisterCb(id, ProcessPacket);
     }
 
@@ -91,7 +91,7 @@ public class ClientLocal
         if(nextOp != null)
             unack_inst[currentFrame] = nextOp;
         pkg_sent_time[currentFrame] = packet.time;
-        NetworkManager.Send(packet, suppress_correct ? 4000 : id == 3 ? 1000 : 0);
+        NetworkManager.Send(packet);
         localPlayer.CopyFrom(world.playerDict[id]);
         
         for (int i = last_ack_frame; i < currentFrame; i++)
@@ -100,7 +100,7 @@ public class ClientLocal
             localPlayer.Update();
         }
 
-        if (suppress_correct)
+        if (MainModule.Instance.LateCommit && id == 2)
         {
             if (localPlayer.CollideWith(world[1]))
             {

@@ -7,7 +7,7 @@ public class ServerLogic
 {
     private static readonly int max_acc_delay_ms = 5000;
     private static readonly int max_window_size = (int)(max_acc_delay_ms / MainModule.frameInterval / 1000);
-    private static readonly int max_jitter_ms = 100;
+    private static readonly int max_jitter_ms = 50;
     private static readonly int max_jitter_size = (int)(max_jitter_ms / MainModule.frameInterval / 1000);
     public World world = new();
 
@@ -34,7 +34,6 @@ public class ServerLogic
         snapshot = new Dictionary<int, Vector2>[size];
         reCalc = new bool[size];
         
-
         foreach (var id in world.playerDict.Keys)
         {
             instDict[id] = new ();
@@ -176,6 +175,9 @@ public class ServerLogic
                         leftWindowIndex[player.id]++;
                     }
                 }
+
+                player.frame = leftWindowIndex[player.id];
+                // Debug.Log($"{player.id}-{player.frame}");
             }
         }
         
@@ -195,11 +197,6 @@ public class ServerLogic
             }
         }
         realtimeFrame++;
-        
-        if (world[1].CollideWith(world[2]))
-        {
-            world[1].hp = 0;
-        }
     }
 
     public void CastState(int id, int frame = -1)
