@@ -14,12 +14,11 @@ public class ServerLogic
     public int realtimeFrame;
     public int last_sent_package_id;
 
-    public Dictionary<int, Player.Instruction>[] instDict; // = { null, new(), new() };
-    public Dictionary<int, World> snapshot = new();
-    public int[] pings;// = { 0, 0, 0 };
-    public int[] leftWindowIndex;// = { int.MaxValue ,0,0 };
-    public int[] sentRemain;// = { 0,0,0 };
-    public bool[] reCalc;// = { false, false, false };
+    public Dictionary<int, Player.Instruction>[] instDict;
+    public Dictionary<int, Vector2>[] snapshot;
+    public int[] pings;
+    public int[] leftWindowIndex;
+    public bool[] reCalc;
 
     public static readonly bool Lockstep = MainModule.Instance.Lockstep;
     public static bool SymmetricDelay => MainModule.Instance.SymmetricDelay;
@@ -32,14 +31,14 @@ public class ServerLogic
         pings = new int[size];
         leftWindowIndex = new int[size];
         leftWindowIndex[0] = int.MaxValue;
-        sentRemain = new int[size];
+        snapshot = new Dictionary<int, Vector2>[size];
         reCalc = new bool[size];
         
 
         foreach (var id in world.playerDict.Keys)
         {
-            instDict[id] = new Dictionary<int, Player.Instruction>();
-            sentRemain[id] = max_jitter_size;
+            instDict[id] = new ();
+            snapshot[id] = new();
         }
     }
 
@@ -81,32 +80,54 @@ public class ServerLogic
         NetworkManager.Send(ack_packet);
     }
 
-    public void TakeSnapshot(int frame)
+    public void TakeSnapshot(Player player, int frame)
     {
-        snapshot[frame] = world.Duplicate();
+        snapshot[player.id][frame] = player.pos;
     }
     
     public void TakeSnapshot()
     {
         int expireFrame = world.frame - max_window_size;
-        TakeSnapshot(world.frame);
-        snapshot.Remove(expireFrame);
         foreach (var player in world.playerDict.Values)
         {
             if (expireFrame >= 0)
             {
                 instDict[player.id].Remove(expireFrame);
+                snapshot[player.id].Remove(expireFrame);
                 if (leftWindowIndex[player.id] < expireFrame)
                 {
                     leftWindowIndex[player.id] = expireFrame;
                 }
             }
+
+            TakeSnapshot(player, world.frame);
         }
     }
     
     public void Update()
     {
         bool update = false;
+        if (!Lockstep)
+        {
+            foreach (var player in world.playerDict.Values)
+            {
+                if (reCalc[player.id])
+                {
+                    // Debug.LogError("-----");
+                    world[player.id].pos = snapshot[player.id][leftWindowIndex[player.id]];
+
+                    for (int i = leftWindowIndex[player.id]; i < world.frame; i++)
+                    {
+                        instDict[player.id].TryGetValue(i + 1, out player.inst);
+                        player.UpdatePos();
+                        // if(player.inst)
+                        //     Debug.LogError($"{i+1}-{player}");
+                        TakeSnapshot(player, i);
+                    }
+                    reCalc[player.id] = false;
+                }
+            }
+        }
         
         for (int i = world.frame; i < realtimeFrame; i++)
         {
@@ -141,36 +162,11 @@ public class ServerLogic
                 update = true;
             }
         }
-        
+
         if (!Lockstep)
         {
             foreach (var player in world.playerDict.Values)
             {
-                if (reCalc[player.id])
-                {
-                    // Debug.LogError("-----");
-                    world[player.id].CopyFrom(snapshot[leftWindowIndex[player.id]][player.id]);
-                    // world[player.id].pos = snapshot[player.id][leftWindowIndex[player.id]];
-
-                    for (int i = leftWindowIndex[player.id]; i < world.frame; i++)
-                    {
-                        instDict[player.id].TryGetValue(i + 1, out player.inst);
-                        player.UpdatePos();
-                        // if(player.inst)
-                        //     Debug.LogError($"{i+1}-{player}");
-                        TakeSnapshot(i);
-                    }
-
-                    int castFrame = Math.Min(leftWindowIndex[player.id] + max_jitter_size, world.frame);
-                    castFrame = Math.Max(castFrame, leftWindowIndex[player.id] - 1);
-                    CastState(player.id, castFrame);
-                    reCalc[player.id] = false;
-                }
-            }
-            
-            foreach (var player in world.playerDict.Values)
-            {
-                bool needCast = false;
                 for (int i = leftWindowIndex[player.id]; i < realtimeFrame; i++)
                 {
                     if (instDict[player.id].ContainsKey(i + 1))
@@ -178,11 +174,8 @@ public class ServerLogic
                         instDict[player.id].Remove(i+1);
                         // snapshot[player.id].Remove(i);
                         leftWindowIndex[player.id]++;
-                        needCast = true;
                     }
                 }
-                if(needCast)
-                    CastState(player.id, leftWindowIndex[player.id]);
             }
         }
         
@@ -190,16 +183,15 @@ public class ServerLogic
         {
             foreach (var pair in world.playerDict)
             {
-                // if (AntiLateCommit && --sentRemain[pair.Key] <= 0)
-                // {
-                //     continue;
-                // }
                 if (SymmetricDelay && leftWindowIndex[pair.Key] + max_jitter_size < world.frame)
                 {
-                    continue;
+                    CastState(pair.Key, leftWindowIndex[pair.Key]);
+                }
+                else
+                {
+                    CastState(pair.Key);
                 }
 
-                CastState(pair.Key);
             }
         }
         realtimeFrame++;
@@ -218,22 +210,22 @@ public class ServerLogic
             src = 0,
             dst = id,
             type = NetworkPacket.Type.State,
-            content = frame >= 0 ? snapshot[frame] : world, // Note: this object can't be modified later!!
+            content = world, // Note: this object can't be modified later!!
         };
         
-        // if (frame >= 0)
-        // {
-        //     Debug.LogError(frame);
-        //     var newWorld = new World(world);
-        //     foreach (var player in newWorld.playerDict.Values)
-        //     {
-        //         if (snapshot[player.id].TryGetValue(frame, out var pos))
-        //         {
-        //             player.pos = pos;
-        //         }
-        //     }
-        //     packet.content = newWorld;
-        // }
+        if (frame >= 0)
+        {
+            // Debug.LogError(frame);
+            var newWorld = new World(world);
+            foreach (var player in newWorld.playerDict.Values)
+            {
+                if (snapshot[player.id].TryGetValue(frame, out var pos))
+                {
+                    player.pos = pos;
+                }
+            }
+            packet.content = newWorld;
+        }
         
         NetworkManager.Send(packet);
     }
