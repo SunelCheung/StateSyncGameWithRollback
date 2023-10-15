@@ -99,6 +99,7 @@ public class ClientLocal
             localPlayer.inst = unack_inst.TryGetValue(i + 1, out var instruction) ? instruction.Duplicate() : null;
             localPlayer.Update();
         }
+        localPlayer.frame = currentFrame;
 
         if (MainModule.Instance.LateCommit && id == 2)
         {

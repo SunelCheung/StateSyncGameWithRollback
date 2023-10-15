@@ -20,6 +20,8 @@ public class MainModule: MonoBehaviour
     public bool LateCommit;
     public int LateCommitDelay = 4000;
     public int BadOneWayLatency = 500;
+    public int JitterMin; // one-way
+    public int JitterMax; // one-way
     public GameObject[] Player;
     // public bool FastRate;
     private static float curFixedTime;
@@ -31,6 +33,8 @@ public class MainModule: MonoBehaviour
         Server = new();
         InputManager = gameObject.GetOrAddComponent<InputManager>();
         PlayerProxy = gameObject.GetOrAddComponent<PlayerProxy>();
+        NetworkManager.jitterMin = JitterMin; 
+        NetworkManager.jitterMax = JitterMax; 
     }
     
     public void Update()
@@ -127,10 +131,10 @@ public class MainModule: MonoBehaviour
                 timeDeltaStat[dst, src] += pair.Value - sendTime;
                 count[dst, src]++;
             }
-            else
-            {
-                Debug.LogError("有问题");
-            }
+            // else
+            // {
+            //     Debug.LogError("有问题");
+            // }
         }
 
         for (int i = 0; i <= Clients.Length; i++)

@@ -555,9 +555,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8f3acd75dae49c5ba0669ec397061b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Lockstep: 1
+  Lockstep: 0
   SymmetricDelay: 0
-  LateCommit: 1
+  LateCommit: 0
+  LateCommitDelay: 4000
+  BadOneWayLatency: 500
+  JitterMin: 0
+  JitterMax: 0
   Player:
   - {fileID: 1349008388}
   - {fileID: 1639507799}

@@ -21,8 +21,8 @@ public class NetworkPacket
 
 public static class NetworkManager
 {
-    public static int delayMin = 10; // one-way
-    public static int delayMax = 50; // one-way
+    public static int jitterMin; 
+    public static int jitterMax;
     private static System.Random random = new();
     private static Dictionary<int, Action<NetworkPacket>> callback = new();
     private static Dictionary<Tuple<int, int>, Queue<InternalPacket>> packetQueue = new();
@@ -69,7 +69,7 @@ public static class NetworkManager
         
         GetQueue(packet).Enqueue(new InternalPacket
         {
-            EAT = DateTime.Now + TimeSpan.FromMilliseconds(random.Next(delayMin, delayMax) + delay),
+            EAT = DateTime.Now + TimeSpan.FromMilliseconds(random.Next(jitterMin, jitterMax) + delay),
             load = packet,
         });
     }
@@ -78,7 +78,7 @@ public static class NetworkManager
     {
         foreach (var packet in GetQueue(src, dst))
         {
-            packet.EAT = DateTime.Now + TimeSpan.FromMilliseconds(random.Next(delayMin, delayMax));
+            packet.EAT = DateTime.Now + TimeSpan.FromMilliseconds(random.Next(jitterMin, jitterMax));
         }
     }
 
