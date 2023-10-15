@@ -12,11 +12,13 @@ public class MainModule: MonoBehaviour
     
     public static InputManager InputManager;
     public static PlayerProxy PlayerProxy;
-    public static ClientLocal[] Clients = { new(1), new(2) };
+    public static ClientLocal[] Clients = { new(1), new(2), new(3) };
     public static ServerLogic Server;
     public bool Lockstep;
-    public bool LateCommit;
     public bool SymmetricDelay;
+    public bool LateCommit;
+    public GameObject[] Player;
+    // public bool FastRate;
     private static float curFixedTime;
     private static float lastUpdateTime;
 
@@ -43,11 +45,6 @@ public class MainModule: MonoBehaviour
         }
 
         curFixedTime += Time.deltaTime;
-    }
-
-    public void FixedUpdate()
-    {
-        // curFixedTime += Time.fixedDeltaTime;
     }
 }
 

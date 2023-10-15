@@ -4,11 +4,12 @@ using UnityEngine;
 
     public class InputManager : MonoBehaviour
     {
-        private Player[] LocalPlayer = new Player [2];
+        private Player[] LocalPlayer = new Player [3];
         public void Start()
         {
             LocalPlayer[0] = MainModule.Clients[0].localPlayer;
             LocalPlayer[1] = MainModule.Clients[1].localPlayer;
+            LocalPlayer[2] = MainModule.Clients[2].localPlayer;
         }
 
         public void Update()
@@ -58,6 +59,28 @@ using UnityEngine;
             else
             {
                 LocalPlayer[1].SetDir(Direction.None);
+            }
+            
+            if (Input.GetKey(KeyCode.I))
+            {
+                LocalPlayer[2].SetDir(Direction.Up);
+            }
+            else if(Input.GetKey(KeyCode.K))
+            {
+                LocalPlayer[2].SetDir(Direction.Down);
+            }
+            else if(Input.GetKey(KeyCode.J))
+            {
+                LocalPlayer[2].SetDir(Direction.Left);
+            }
+            else if(Input.GetKey(KeyCode.L))
+            {
+                LocalPlayer[2].SetDir(Direction.Right);
+            }
+            else
+            {
+                // LocalPlayer[0].SetDir(Direction.Right);
+                LocalPlayer[2].SetDir(Direction.None);
             }
         }
     }

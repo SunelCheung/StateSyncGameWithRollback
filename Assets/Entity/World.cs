@@ -13,7 +13,8 @@ public class World
     {
         var player1 = new Player(1){pos = new Vector2(Player.x_min / 2, Player.y_min / 2)};
         var player2 = new Player(2){pos = new Vector2(Player.x_max / 2, Player.y_max / 2), speed = 1.5f};
-        playerDict = new Dictionary<int, Player> { { 1, player1 }, { 2, player2 } };
+        var player3 = new Player(3){pos = new Vector2(Player.x_max / 2, Player.y_min / 2)};
+        playerDict = new Dictionary<int, Player> { { 1, player1 }, { 2, player2 } , { 3, player3 } };
     }
     
     public World(World src)
