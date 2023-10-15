@@ -7,7 +7,7 @@ public class ServerLogic
 {
     private static readonly int max_acc_delay_ms = 5000;
     private static readonly int max_window_size = (int)(max_acc_delay_ms / MainModule.frameInterval / 1000);
-    private static readonly int max_jitter_ms = 50;
+    private static readonly int max_jitter_ms = 100;
     private static readonly int max_jitter_size = (int)(max_jitter_ms / MainModule.frameInterval / 1000);
     public World world = new();
 
@@ -49,7 +49,7 @@ public class ServerLogic
             return;
         }
 
-        var timeDelta = (int)(DateTime.Now - packet.time).TotalMilliseconds;
+        var timeDelta = (int)(MainModule.PastTime - packet.time).TotalMilliseconds;
         if (timeDelta < 0 || timeDelta > max_acc_delay_ms)
         {
             Debug.Log($"invalid packet: {timeDelta} ms from {packet.src} excess max tolerance {max_acc_delay_ms}");
@@ -176,7 +176,6 @@ public class ServerLogic
                     }
                 }
 
-                player.frame = leftWindowIndex[player.id];
                 // Debug.Log($"{player.id}-{player.frame}");
             }
         }
@@ -194,6 +193,7 @@ public class ServerLogic
                     CastState(pair.Key);
                 }
 
+                pair.Value.frame = Lockstep ? world.frame : leftWindowIndex[pair.Key];
             }
         }
         realtimeFrame++;

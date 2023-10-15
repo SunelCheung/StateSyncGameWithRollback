@@ -6,7 +6,7 @@ public class NetworkPacket
 {
     public int id;
     public Type type;
-    public DateTime time = DateTime.Now;
+    public TimeSpan time = MainModule.PastTime;
     public int src;
     public int dst;
     public object content;
@@ -30,7 +30,7 @@ public static class NetworkManager
 
     class InternalPacket
     {
-        public DateTime EAT;
+        public TimeSpan EAT;
         public NetworkPacket load;
     }
     
@@ -69,7 +69,7 @@ public static class NetworkManager
         
         GetQueue(packet).Enqueue(new InternalPacket
         {
-            EAT = DateTime.Now + TimeSpan.FromMilliseconds(random.Next(jitterMin, jitterMax) + delay),
+            EAT = MainModule.PastTime + TimeSpan.FromMilliseconds(random.Next(jitterMin, jitterMax) + delay),
             load = packet,
         });
     }
@@ -78,7 +78,7 @@ public static class NetworkManager
     {
         foreach (var packet in GetQueue(src, dst))
         {
-            packet.EAT = DateTime.Now + TimeSpan.FromMilliseconds(random.Next(jitterMin, jitterMax));
+            packet.EAT = MainModule.PastTime + TimeSpan.FromMilliseconds(random.Next(jitterMin, jitterMax));
         }
     }
 
@@ -94,10 +94,10 @@ public static class NetworkManager
     {
         tempList.Clear();
         tempList.AddRange(packetQueue.Values);
-        var now = DateTime.Now;
+        var time = MainModule.PastTime;
         foreach (var queue in tempList)
         {
-            while(queue.TryPeek(out var packet) && now >= packet.EAT)
+            while(queue.TryPeek(out var packet) && time >= packet.EAT)
             {
                 queue.Dequeue();
                 callback[packet.load.dst](packet.load);

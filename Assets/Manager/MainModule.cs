@@ -13,8 +13,8 @@ public class MainModule: MonoBehaviour
     public static PlayerProxy PlayerProxy;
     public static ClientLocal[] Clients = { new(1), new(2), new(3) };
     public static ServerLogic Server;
-    private static Dictionary<Tuple<int, int>, DateTime> sendStat = new ();
-    private static Dictionary<Tuple<int, int, int>, DateTime> recvStat = new ();
+    private static Dictionary<Tuple<int, int>, TimeSpan> sendStat = new ();
+    private static Dictionary<Tuple<int, int, int>, TimeSpan> recvStat = new ();
     public bool Lockstep;
     public bool SymmetricDelay;
     public bool LateCommit;
@@ -26,10 +26,12 @@ public class MainModule: MonoBehaviour
     // public bool FastRate;
     private static float curFixedTime;
     private static float lastUpdateTime;
+    // private static DateTime startTime;
 
     public void Awake()
     {
         _instance = this;
+        // startTime = DateTime.Now;
         Server = new();
         InputManager = gameObject.GetOrAddComponent<InputManager>();
         PlayerProxy = gameObject.GetOrAddComponent<PlayerProxy>();
@@ -63,7 +65,7 @@ public class MainModule: MonoBehaviour
         
         var tuple = packet.content as Tuple<int, Player.Instruction>;
                 
-        if (!sendStat.TryAdd(new Tuple<int, int>(tuple.Item1 + 1, packet.src), DateTime.Now))
+        if (!sendStat.TryAdd(new Tuple<int, int>(tuple.Item1 + 1, packet.src), PastTime))
         {
             Debug.LogError($"{tuple.Item1 + 1}-{packet.src}-{packet.dst}");
         }
@@ -72,12 +74,12 @@ public class MainModule: MonoBehaviour
     
     public static void CollectRecvInfo(NetworkPacket packet)
     {
-        var nowTime = DateTime.Now;
+        var time = PastTime;
         switch (packet.type)
         {
             case NetworkPacket.Type.Command:
                 var tuple = packet.content as Tuple<int, Player.Instruction>;
-                if (!recvStat.TryAdd(new Tuple<int, int, int>(tuple.Item1 + 1, packet.src, packet.dst), nowTime))
+                if (!recvStat.TryAdd(new Tuple<int, int, int>(tuple.Item1 + 1, packet.src, packet.dst), time))
                 {
                     Debug.Log($"{tuple.Item1 + 1}-{packet.src}-{packet.dst}");
                 }
@@ -85,7 +87,7 @@ public class MainModule: MonoBehaviour
             case NetworkPacket.Type.State:
                 foreach (var player in (packet.content as World).playerDict.Values)
                 {
-                    if (!recvStat.TryAdd(new Tuple<int, int, int>(player.frame, player.id, packet.dst), nowTime))
+                    if (!recvStat.TryAdd(new Tuple<int, int, int>(player.frame, player.id, packet.dst), time))
                     {
                         // Debug.Log($"{player.frame}-{player.id}-{packet.dst}");
                     }
@@ -96,6 +98,8 @@ public class MainModule: MonoBehaviour
         }
     }
 
+    public static TimeSpan PastTime => TimeSpan.FromSeconds(Time.timeSinceLevelLoadAsDouble);
+    
     public void OnApplicationQuit()
     {
         var sb = new StringBuilder();

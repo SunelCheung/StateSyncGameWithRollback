@@ -9,7 +9,7 @@ public class ClientLocal
     public int id;
     
     public static readonly int drop_threshold = 120;
-    public Dictionary<int, DateTime> pkg_sent_time = new();
+    public Dictionary<int, TimeSpan> pkg_sent_time = new();
     public int ping;
     public World world = new();
     public Dictionary<int, Player.Instruction> unack_inst = new();
@@ -38,17 +38,16 @@ public class ClientLocal
         {
             case NetworkPacket.Type.State:
                 world.CopyFrom(packet.content as World);
-                if (MainModule.Instance.Lockstep)
+                for (int i = last_ack_frame; i < world[id].frame; i++)
                 {
-                    last_ack_frame = world.frame;
+                    unack_inst.Remove(i);
                 }
+                last_ack_frame = world[id].frame;
                 break;
             case NetworkPacket.Type.Ack:
                 int frame = (int)packet.content;
-                ping = (int)((DateTime.Now - pkg_sent_time[frame]) / 2).TotalMilliseconds;
+                ping = (int)((MainModule.PastTime - pkg_sent_time[frame]) / 2).TotalMilliseconds;
                 pkg_sent_time.Remove(frame);
-                if (!MainModule.Instance.Lockstep)
-                    unack_inst.Remove(frame);
                 break;
             default:
                 throw new InvalidDataException($"invalid packet:{packet.type}");
@@ -57,27 +56,6 @@ public class ClientLocal
     
     public void Update()
     {
-        if (!MainModule.Instance.Lockstep)
-        {
-            if (currentFrame - drop_threshold > last_ack_frame)
-            {
-                last_ack_frame = currentFrame - drop_threshold;
-                unack_inst.Remove(last_ack_frame);
-            }
-            else
-            {
-                for (int i = last_ack_frame; i < currentFrame; i++)
-                {
-                    if (unack_inst.ContainsKey(i+1))
-                    {
-                        break;
-                    }
-            
-                    last_ack_frame++;
-                }
-            }
-        }
-
         currentFrame++;
         var nextOp = localPlayer.inst.Duplicate();
         var packet = new NetworkPacket
@@ -99,7 +77,11 @@ public class ClientLocal
             localPlayer.inst = unack_inst.TryGetValue(i + 1, out var instruction) ? instruction.Duplicate() : null;
             localPlayer.Update();
         }
+
+        localPlayer.inst = null;
         localPlayer.frame = currentFrame;
+        // if(id == 3 && currentFrame < 25)
+        //     Debug.LogError($"{localPlayer.frame}-{localPlayer}");
 
         if (MainModule.Instance.LateCommit && id == 2)
         {
