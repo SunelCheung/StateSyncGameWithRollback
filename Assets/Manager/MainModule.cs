@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class MainModule: MonoBehaviour
 {
-    public static readonly float frameInterval = 0.05f;
+    public static readonly float frameInterval = 1f / 20;
     private static MainModule _instance;
     public static MainModule Instance => _instance;
     
@@ -19,10 +19,10 @@ public class MainModule: MonoBehaviour
     public bool SymmetricDelay;
     public bool LateCommit;
     public int LateCommitDelay = 4000;
-    public bool PoorConnectionExist;
-    public int BadOneWayLatency = 500;
     public bool FastRate;
-    public float TimeScale = 1.4f;
+    public float FastRateScale = 1.4f;
+    public bool PoorConnectionExist;
+    public int BadOneWayLatency = 240;
     public int JitterMin; // one-way
     public int JitterMax; // one-way
     public GameObject[] Player;
@@ -40,13 +40,12 @@ public class MainModule: MonoBehaviour
     
     public void Update()
     {
-        NetworkManager.ProcessPacket();
         foreach (var client in Clients)
         {
-            client.Update();
+            client.TryUpdate();
+            NetworkManager.ProcessPacket();
+            Server.TryUpdate();
         }
-        NetworkManager.ProcessPacket();
-        Server.Update();
     }
 
     public static void CollectSendInfo(NetworkPacket packet)
@@ -56,11 +55,15 @@ public class MainModule: MonoBehaviour
             return;
         }
         
-        var tuple = packet.content as Tuple<int, Player.Instruction>;
-                
-        if (!sendStat.TryAdd(new Tuple<int, int>(tuple.Item1 + 1, packet.src), PastTime))
+        if (packet.dst != 0)
         {
-            Debug.LogError($"{tuple.Item1 + 1}-{packet.src}-{packet.dst}");
+            Debug.LogError("有问题");
+        }
+        var tuple = packet.content as Tuple<int, Player.Instruction>;
+        
+        if (!sendStat.TryAdd(new Tuple<int, int>(tuple.Item1, packet.src), PastTime))
+        {
+            Debug.LogError($"{tuple.Item1}-{packet.src}-{packet.dst}");
         }
     }
     
@@ -71,22 +74,22 @@ public class MainModule: MonoBehaviour
         {
             case NetworkPacket.Type.Command:
                 var tuple = packet.content as Tuple<int, Player.Instruction>;
-                if (!recvStat.TryAdd(new Tuple<int, int, int>(tuple.Item1 + 1, packet.src, packet.dst), time))
+                if (packet.dst != 0)
                 {
-                    Debug.Log($"{tuple.Item1 + 1}-{packet.src}-{packet.dst}");
+                    Debug.LogError("有问题");
+                }
+                if (!recvStat.TryAdd(new Tuple<int, int, int>(tuple.Item1, packet.src, 0), time))
+                {
+                    Debug.Log($"{tuple.Item1}-{packet.src}-0");
                 }
                 break;
             case NetworkPacket.Type.State:
-                foreach (var player in (packet.content as World).playerDict.Values)
+                var world = packet.content as World;
+                foreach (var player in world.playerDict.Values)
                 {
-                    if (!recvStat.TryAdd(new Tuple<int, int, int>(player.frame, player.id, packet.dst), time))
-                    {
-                        // Debug.Log($"{player.frame}-{player.id}-{packet.dst}");
-                    }
+                    recvStat.TryAdd(new Tuple<int, int, int>(player.frame, player.id, packet.dst), time);
                 }
                 break;
-            // default:
-            //     return;
         }
     }
 
@@ -97,13 +100,21 @@ public class MainModule: MonoBehaviour
         var sb = new StringBuilder();
         sb.Append("Total frame:");
         sb.Append(Server.realtimeFrame);
-        sb.Append("\n");
+        sb.Append("\nCheat:\t");
         if (LateCommit)
         {
-            sb.Append("LateCommit ON");
-            sb.Append("\n");
+            sb.Append($"LateCommit(Delay:{LateCommitDelay})\t");
         }
-        sb.Append("Anti-Cheat:");
+        if (FastRate)
+        {
+            sb.Append($"FastRate(Scale:{FastRateScale})\t");
+        }
+        if (!LateCommit && !FastRate)
+        {
+            sb.Append($"NONE");
+        }
+        
+        sb.Append("\nAnti-Cheat:\t");
         if (Lockstep)
         {
             sb.Append("Lockstep");
@@ -127,16 +138,16 @@ public class MainModule: MonoBehaviour
                 timeDeltaStat[dst, src] += pair.Value - sendTime;
                 count[dst, src]++;
             }
-            // else
-            // {
-            //     Debug.LogError("有问题");
-            // }
+            else if(frame != 0)
+            {
+                Debug.LogError($"{frame}-{src}-{dst}");
+            }
         }
 
         for (int i = 0; i <= Clients.Length; i++)
         {
             sb.Append($"\n");
-            sb.Append(i==0?"server":$"client{i}");
+            sb.Append(i==0?"server\t":$"client{i}\t");
             foreach (var client in Clients)
             {
                 if (count[i, client.id] == 0)
@@ -144,7 +155,7 @@ public class MainModule: MonoBehaviour
                     continue;
                 }
                 var deltaTime = (int)timeDeltaStat[i, client.id].TotalMilliseconds / count[i, client.id];
-                sb.Append($"\tfrom{client.id}:{deltaTime}");
+                sb.Append($"from{client.id}:{deltaTime}\t");
             }
         }
         

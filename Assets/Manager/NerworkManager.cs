@@ -57,7 +57,7 @@ public static class NetworkManager
         {
             delay = MainModule.Instance.LateCommitDelay;
         }
-        else if (packet.src == 3 && MainModule.Instance.PoorConnectionExist)
+        else if ((packet.src == 3 || packet.dst == 3) && MainModule.Instance.PoorConnectionExist)
         {
             delay = MainModule.Instance.BadOneWayLatency;
         }

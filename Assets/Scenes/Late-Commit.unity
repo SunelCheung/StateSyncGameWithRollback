@@ -559,10 +559,10 @@ MonoBehaviour:
   SymmetricDelay: 0
   LateCommit: 0
   LateCommitDelay: 4000
+  FastRate: 0
+  FastRateScale: 1.4
   PoorConnectionExist: 1
-  BadOneWayLatency: 500
-  FastRate: 1
-  TimeScale: 1.4
+  BadOneWayLatency: 190
   JitterMin: 10
   JitterMax: 50
   Player:

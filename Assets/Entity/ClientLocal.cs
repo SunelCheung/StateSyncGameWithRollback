@@ -18,7 +18,6 @@ public class ClientLocal
 
     private double curLogicTime;
     private double lastUpdateTime;
-    // private bool fast_rate => MainModule.Instance.FastRate && id == 2;
 
     public ClientLocal(int id)
     {
@@ -54,13 +53,13 @@ public class ClientLocal
         }
     }
 
-    public void Update()
+    public void TryUpdate()
     {
         var pastTime = Time.timeSinceLevelLoadAsDouble;
         var deltaTime = pastTime - lastUpdateTime;
         if (id == 2 && MainModule.Instance.FastRate)
         {
-            deltaTime *= MainModule.Instance.TimeScale;
+            deltaTime *= MainModule.Instance.FastRateScale;
         }
         lastUpdateTime += deltaTime;
         if (lastUpdateTime - curLogicTime >= MainModule.frameInterval)
@@ -86,9 +85,9 @@ public class ClientLocal
             unack_inst[currentFrame] = nextOp;
         pkg_sent_time[currentFrame] = packet.time;
         NetworkManager.Send(packet);
-        // if(id == 3 && currentFrame < 20)
-        //     Debug.LogError($"{localPlayer.frame}-{localPlayer}");
         localPlayer.CopyFrom(world.playerDict[id]);
+        if(id == 3 && currentFrame < 15)
+            Debug.Log($"before {localPlayer.frame}-{localPlayer}\n{world.playerDict[id]}");
         
         for (int i = last_ack_frame; i < currentFrame; i++)
         {
@@ -98,8 +97,10 @@ public class ClientLocal
 
         localPlayer.inst = null;
         localPlayer.frame = currentFrame;
+        if(id == 3 && currentFrame < 15)
+            Debug.LogWarning($"after {localPlayer.frame}-{localPlayer}");
 
-        if (MainModule.Instance.LateCommit && id == 2)
+        if (id == 2 && MainModule.Instance.LateCommit)
         {
             if (localPlayer.CollideWith(world[1]))
             {

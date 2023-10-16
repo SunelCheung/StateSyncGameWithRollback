@@ -35,7 +35,6 @@ public static class Manager
             if(dst.playerDict.TryGetValue(remote_player.id, out var localPlayer))
             {
                 localPlayer.CopyFrom(remote_player);
-                // localPlayer.frame = src.frame;
             }
             else
             {
