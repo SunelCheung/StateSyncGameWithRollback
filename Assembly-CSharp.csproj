@@ -45,17 +45,17 @@
     <Analyzer Include="/Applications/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets/XUnityEx.cs" />
-     <Compile Include="Assets/Manager/NerworkManager.cs" />
-     <Compile Include="Assets/Entity/ServerLogic.cs" />
-     <Compile Include="Assets/Singleton.cs" />
-     <Compile Include="Assets/Entity/ClientProxy.cs" />
-     <Compile Include="Assets/Entity/World.cs" />
-     <Compile Include="Assets/Entity/ClientLocal.cs" />
-     <Compile Include="Assets/Manager/InputManager.cs" />
-     <Compile Include="Assets/Entity/Player.cs" />
-     <Compile Include="Assets/Manager/MainModule.cs" />
      <Compile Include="Assets/Entity/PlayerProxy.cs" />
+     <Compile Include="Assets/Manager/MainModule.cs" />
+     <Compile Include="Assets/Entity/ClientProxy.cs" />
+     <Compile Include="Assets/Entity/ClientLocal.cs" />
+     <Compile Include="Assets/Entity/ServerLogic.cs" />
+     <Compile Include="Assets/Entity/Player.cs" />
+     <Compile Include="Assets/Singleton.cs" />
+     <Compile Include="Assets/XUnityEx.cs" />
+     <Compile Include="Assets/Manager/InputManager.cs" />
+     <Compile Include="Assets/Entity/World.cs" />
+     <Compile Include="Assets/Manager/NerworkManager.cs" />
      <Folder Include="Assets" />
      <Folder Include="Assets/Scenes" />
      <Folder Include="Assets/Entity" />
@@ -678,20 +678,11 @@
      <Reference Include="UnityEditor.UI">
      <HintPath>/Users/sunelcheung/Documents/CALife/Master/981-Computer Engineering Project/Project/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
      </Reference>
-     <Reference Include="Unity.Rider.Editor">
-     <HintPath>/Users/sunelcheung/Documents/CALife/Master/981-Computer Engineering Project/Project/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
-     </Reference>
-     <Reference Include="Unity.2D.Sprite.Editor">
-     <HintPath>/Users/sunelcheung/Documents/CALife/Master/981-Computer Engineering Project/Project/Library/ScriptAssemblies/Unity.2D.Sprite.Editor.dll</HintPath>
-     </Reference>
      <Reference Include="UnityEngine.UI">
      <HintPath>/Users/sunelcheung/Documents/CALife/Master/981-Computer Engineering Project/Project/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
      </Reference>
-     <Reference Include="Unity.TextMeshPro">
-     <HintPath>/Users/sunelcheung/Documents/CALife/Master/981-Computer Engineering Project/Project/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
-     </Reference>
-     <Reference Include="Unity.TextMeshPro.Editor">
-     <HintPath>/Users/sunelcheung/Documents/CALife/Master/981-Computer Engineering Project/Project/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+     <Reference Include="Unity.Rider.Editor">
+     <HintPath>/Users/sunelcheung/Documents/CALife/Master/981-Computer Engineering Project/Project/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
      </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -93,6 +93,7 @@ public class ServerLogic
             {
                 instDict[player.id].Remove(expireFrame);
                 snapshot[player.id].Remove(expireFrame);
+                // leftWindowIndex[player.id] = Math.Max(leftWindowIndex[player.id], expireFrame);
                 if (leftWindowIndex[player.id] < expireFrame)
                 {
                     leftWindowIndex[player.id] = expireFrame;
@@ -105,6 +106,7 @@ public class ServerLogic
     
     public void Update()
     {
+        realtimeFrame++;
         bool update = false;
         if (!Lockstep)
         {
@@ -112,9 +114,7 @@ public class ServerLogic
             {
                 if (reCalc[player.id])
                 {
-                    // Debug.LogError("-----");
                     world[player.id].pos = snapshot[player.id][leftWindowIndex[player.id]];
-
                     for (int i = leftWindowIndex[player.id]; i < world.frame; i++)
                     {
                         instDict[player.id].TryGetValue(i + 1, out player.inst);
@@ -125,13 +125,22 @@ public class ServerLogic
                     }
                     reCalc[player.id] = false;
                 }
+                for (int i = leftWindowIndex[player.id]; i < world.frame; i++)
+                {
+                    if (instDict[player.id].ContainsKey(i + 1))
+                    {
+                        instDict[player.id].Remove(i+1);
+                        // snapshot[player.id].Remove(i);
+                        leftWindowIndex[player.id]++;
+                    }
+                }
             }
         }
         
         for (int i = world.frame; i < realtimeFrame; i++)
         {
             bool allArrive = true;
-            if (realtimeFrame - world.frame < (Lockstep ? max_window_size : max_jitter_size))
+            if (realtimeFrame - world.frame < (Lockstep ? max_window_size : max_jitter_size)) // when realtimeFrame == world.frame can't proceed.
             {
                 foreach (var player in world.playerDict.Values)
                 {
@@ -161,30 +170,13 @@ public class ServerLogic
                 update = true;
             }
         }
-
-        if (!Lockstep)
-        {
-            foreach (var player in world.playerDict.Values)
-            {
-                for (int i = leftWindowIndex[player.id]; i < realtimeFrame; i++)
-                {
-                    if (instDict[player.id].ContainsKey(i + 1))
-                    {
-                        instDict[player.id].Remove(i+1);
-                        // snapshot[player.id].Remove(i);
-                        leftWindowIndex[player.id]++;
-                    }
-                }
-
-                // Debug.Log($"{player.id}-{player.frame}");
-            }
-        }
         
         if (update)
         {
             foreach (var pair in world.playerDict)
             {
-                if (SymmetricDelay && leftWindowIndex[pair.Key] + max_jitter_size < world.frame)
+                pair.Value.frame = Lockstep ? world.frame : leftWindowIndex[pair.Key];
+                if (SymmetricDelay && leftWindowIndex[pair.Key] + max_jitter_size <= world.frame)
                 {
                     CastState(pair.Key, leftWindowIndex[pair.Key]);
                 }
@@ -192,11 +184,8 @@ public class ServerLogic
                 {
                     CastState(pair.Key);
                 }
-
-                pair.Value.frame = Lockstep ? world.frame : leftWindowIndex[pair.Key];
             }
         }
-        realtimeFrame++;
     }
 
     public void CastState(int id, int frame = -1)
