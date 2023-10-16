@@ -6,9 +6,10 @@ using UnityEngine;
 public class ServerLogic
 {
     private static readonly int max_acc_delay_ms = 5000;
-    private static readonly int max_window_size = (int)(max_acc_delay_ms / MainModule.frameInterval / 1000);
+    private static readonly int max_window_size = Convert.ToInt32(max_acc_delay_ms / MainModule.frameInterval / 1000);
     private static readonly int max_jitter_ms = 100;
-    private static readonly int max_jitter_size = (int)(max_jitter_ms / MainModule.frameInterval / 1000);
+    private static readonly int max_jitter_size = Convert.ToInt32(max_jitter_ms / MainModule.frameInterval / 1000);
+    private double curLogicTime;
     public World world = new();
 
     public int realtimeFrame;
@@ -106,6 +107,15 @@ public class ServerLogic
     
     public void Update()
     {
+        if (Time.timeSinceLevelLoadAsDouble - curLogicTime >= MainModule.frameInterval)
+        {
+            curLogicTime += MainModule.frameInterval;
+            LogicUpdate();
+        }
+    }
+    
+    public void LogicUpdate()
+    {
         realtimeFrame++;
         bool update = false;
         if (!Lockstep)
@@ -125,11 +135,12 @@ public class ServerLogic
                     }
                     reCalc[player.id] = false;
                 }
-                for (int i = leftWindowIndex[player.id]; i < world.frame; i++)
+                for (int i = leftWindowIndex[player.id]; i < realtimeFrame; i++)
                 {
                     if (instDict[player.id].ContainsKey(i + 1))
                     {
-                        instDict[player.id].Remove(i+1);
+                        if(i < world.frame)
+                            instDict[player.id].Remove(i+1);
                         // snapshot[player.id].Remove(i);
                         leftWindowIndex[player.id]++;
                     }

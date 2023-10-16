@@ -52,10 +52,6 @@ using UnityEngine;
             {
                 LocalPlayer[1].SetDir(Direction.Right);
             }
-            // else if (LocalPlayer[1].frame < 10)
-            // {
-            //     LocalPlayer[1].SetDir(Direction.Down);
-            // }
             else
             {
                 LocalPlayer[1].SetDir(Direction.None);
@@ -77,6 +73,10 @@ using UnityEngine;
             {
                 LocalPlayer[2].SetDir(Direction.Right);
             }
+            // else if (LocalPlayer[2].frame < 10)
+            // {
+            //     LocalPlayer[2].SetDir(Direction.Up);
+            // }
             else
             {
                 // LocalPlayer[0].SetDir(Direction.Right);

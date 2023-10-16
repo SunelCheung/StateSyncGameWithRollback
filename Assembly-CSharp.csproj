@@ -51,7 +51,6 @@
      <Compile Include="Assets/Entity/ClientLocal.cs" />
      <Compile Include="Assets/Entity/ServerLogic.cs" />
      <Compile Include="Assets/Entity/Player.cs" />
-     <Compile Include="Assets/Singleton.cs" />
      <Compile Include="Assets/XUnityEx.cs" />
      <Compile Include="Assets/Manager/InputManager.cs" />
      <Compile Include="Assets/Entity/World.cs" />

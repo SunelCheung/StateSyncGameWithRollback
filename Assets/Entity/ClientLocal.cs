@@ -7,8 +7,6 @@ using UnityEngine;
 public class ClientLocal
 {
     public int id;
-    
-    public static readonly int drop_threshold = 120;
     public Dictionary<int, TimeSpan> pkg_sent_time = new();
     public int ping;
     public World world = new();
@@ -18,6 +16,8 @@ public class ClientLocal
     public int currentFrame;
     private int last_ack_frame;
 
+    private double curLogicTime;
+    private double lastUpdateTime;
     // private bool fast_rate => MainModule.Instance.FastRate && id == 2;
 
     public ClientLocal(int id)
@@ -53,8 +53,24 @@ public class ClientLocal
                 throw new InvalidDataException($"invalid packet:{packet.type}");
         }
     }
-    
+
     public void Update()
+    {
+        var pastTime = Time.timeSinceLevelLoadAsDouble;
+        var deltaTime = pastTime - lastUpdateTime;
+        if (id == 2 && MainModule.Instance.FastRate)
+        {
+            deltaTime *= MainModule.Instance.TimeScale;
+        }
+        lastUpdateTime += deltaTime;
+        if (lastUpdateTime - curLogicTime >= MainModule.frameInterval)
+        {
+            curLogicTime +=  MainModule.frameInterval;
+            LogicUpdate();
+        }
+    }
+    
+    public void LogicUpdate()
     {
         currentFrame++;
         var nextOp = localPlayer.inst.Duplicate();
@@ -70,6 +86,8 @@ public class ClientLocal
             unack_inst[currentFrame] = nextOp;
         pkg_sent_time[currentFrame] = packet.time;
         NetworkManager.Send(packet);
+        // if(id == 3 && currentFrame < 20)
+        //     Debug.LogError($"{localPlayer.frame}-{localPlayer}");
         localPlayer.CopyFrom(world.playerDict[id]);
         
         for (int i = last_ack_frame; i < currentFrame; i++)
@@ -80,8 +98,6 @@ public class ClientLocal
 
         localPlayer.inst = null;
         localPlayer.frame = currentFrame;
-        // if(id == 3 && currentFrame < 25)
-        //     Debug.LogError($"{localPlayer.frame}-{localPlayer}");
 
         if (MainModule.Instance.LateCommit && id == 2)
         {

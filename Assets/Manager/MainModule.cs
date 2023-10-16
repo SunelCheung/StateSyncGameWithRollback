@@ -19,14 +19,13 @@ public class MainModule: MonoBehaviour
     public bool SymmetricDelay;
     public bool LateCommit;
     public int LateCommitDelay = 4000;
+    public bool PoorConnectionExist;
     public int BadOneWayLatency = 500;
+    public bool FastRate;
+    public float TimeScale = 1.4f;
     public int JitterMin; // one-way
     public int JitterMax; // one-way
     public GameObject[] Player;
-    // public bool FastRate;
-    private static float curFixedTime;
-    private static float lastUpdateTime;
-    // private static DateTime startTime;
 
     public void Awake()
     {
@@ -42,18 +41,12 @@ public class MainModule: MonoBehaviour
     public void Update()
     {
         NetworkManager.ProcessPacket();
-        
-        if (curFixedTime - lastUpdateTime >= frameInterval)
+        foreach (var client in Clients)
         {
-            foreach (var client in Clients)
-            {
-                client.Update();
-            }
-            Server.Update();
-            lastUpdateTime += frameInterval;
+            client.Update();
         }
-
-        curFixedTime += Time.deltaTime;
+        NetworkManager.ProcessPacket();
+        Server.Update();
     }
 
     public static void CollectSendInfo(NetworkPacket packet)
@@ -69,7 +62,6 @@ public class MainModule: MonoBehaviour
         {
             Debug.LogError($"{tuple.Item1 + 1}-{packet.src}-{packet.dst}");
         }
-        
     }
     
     public static void CollectRecvInfo(NetworkPacket packet)
