@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class MainModule: MonoBehaviour
 {
@@ -22,7 +23,7 @@ public class MainModule: MonoBehaviour
     public bool PoorConnectionExist;
     public int BadOneWayLatency = 500;
     public bool FastRate;
-    public float TimeScale = 1.4f;
+    public float FastRateScale = 1.4f;
     public int JitterMin; // one-way
     public int JitterMax; // one-way
     public GameObject[] Player;
@@ -40,15 +41,14 @@ public class MainModule: MonoBehaviour
     
     public void Update()
     {
-        NetworkManager.ProcessPacket();
         foreach (var client in Clients)
         {
-            client.Update();
+            client.TryUpdate();
+            NetworkManager.ProcessPacket();
+            Server.TryUpdate();
         }
-        NetworkManager.ProcessPacket();
-        Server.Update();
     }
-
+    
     public static void CollectSendInfo(NetworkPacket packet)
     {
         if (packet.type != NetworkPacket.Type.Command)
@@ -151,4 +151,3 @@ public class MainModule: MonoBehaviour
         Debug.Log(sb);
     }
 }
-

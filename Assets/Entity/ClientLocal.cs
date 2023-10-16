@@ -54,13 +54,13 @@ public class ClientLocal
         }
     }
 
-    public void Update()
+    public void TryUpdate()
     {
         var pastTime = Time.timeSinceLevelLoadAsDouble;
         var deltaTime = pastTime - lastUpdateTime;
         if (id == 2 && MainModule.Instance.FastRate)
         {
-            deltaTime *= MainModule.Instance.TimeScale;
+            deltaTime *= MainModule.Instance.FastRateScale;
         }
         lastUpdateTime += deltaTime;
         if (lastUpdateTime - curLogicTime >= MainModule.frameInterval)

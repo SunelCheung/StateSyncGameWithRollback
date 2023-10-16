@@ -7,7 +7,7 @@ public class ServerLogic
 {
     private static readonly int max_acc_delay_ms = 5000;
     private static readonly int max_window_size = Convert.ToInt32(max_acc_delay_ms / MainModule.frameInterval / 1000);
-    private static readonly int max_jitter_ms = 100;
+    private static readonly int max_jitter_ms = 50;
     private static readonly int max_jitter_size = Convert.ToInt32(max_jitter_ms / MainModule.frameInterval / 1000);
     private double curLogicTime;
     public World world = new();
@@ -105,7 +105,7 @@ public class ServerLogic
         }
     }
     
-    public void Update()
+    public void TryUpdate()
     {
         if (Time.timeSinceLevelLoadAsDouble - curLogicTime >= MainModule.frameInterval)
         {
@@ -206,8 +206,7 @@ public class ServerLogic
             id = ++last_sent_package_id,
             src = 0,
             dst = id,
-            type = NetworkPacket.Type.State,
-            content = world, // Note: this object can't be modified later!!
+            type = NetworkPacket.Type.State, // Note: this object can't be modified later!!
         };
         
         if (frame >= 0)
@@ -223,6 +222,10 @@ public class ServerLogic
             }
             packet.content = newWorld;
         }
+        else
+        {
+            packet.content = new World(world);
+        }
         
         NetworkManager.Send(packet);
     }
@@ -232,9 +235,10 @@ public class ServerLogic
         sb.Append("server realtime_frame:");
         sb.Append(realtimeFrame);
         sb.Append("\t ping:");
-        sb.Append(pings[1]);
-        sb.Append(" ");
-        sb.Append(pings[2]);
+        foreach (var id in world.playerDict.Keys)
+        {
+            sb.Append($"{id}:{pings[id]}\t");
+        }
         sb.Append("\n");
         sb.Append(world);
         return sb.ToString();
