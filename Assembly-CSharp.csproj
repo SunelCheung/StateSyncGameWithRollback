@@ -55,8 +55,10 @@
      <Compile Include="Assets/Manager/InputManager.cs" />
      <Compile Include="Assets/Entity/World.cs" />
      <Compile Include="Assets/Manager/NerworkManager.cs" />
+     <Compile Include="Assets/XPing.cs" />
      <Folder Include="Assets" />
      <Folder Include="Assets/Scenes" />
+     <Folder Include="Assets/Sprite" />
      <Folder Include="Assets/Entity" />
      <Folder Include="Assets/Manager" />
      <Reference Include="UnityEngine">

@@ -30,9 +30,12 @@ using UnityEngine;
             {
                 LocalPlayer[0].SetDir(Direction.Right);
             }
+            // else if (LocalPlayer[0].frame < 10)
+            // {
+            //     LocalPlayer[0].SetDir(Direction.Down);
+            // }
             else
             {
-                // LocalPlayer[0].SetDir(Direction.Right);
                 LocalPlayer[0].SetDir(Direction.None);
             }
             
@@ -79,7 +82,6 @@ using UnityEngine;
             // }
             else
             {
-                // LocalPlayer[0].SetDir(Direction.Right);
                 LocalPlayer[2].SetDir(Direction.None);
             }
         }

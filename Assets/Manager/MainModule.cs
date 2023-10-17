@@ -97,12 +97,31 @@ public class MainModule: MonoBehaviour
         var sb = new StringBuilder();
         sb.Append("Total frame:");
         sb.Append(Server.realtimeFrame);
+        
+        sb.Append("\n");
+        sb.Append("ping:\t");
+        foreach (var client in Clients)
+        {
+            sb.Append(client.id);
+            sb.Append("-");
+            sb.Append(client.ping);
+            sb.Append("\t");
+        }
+        
         sb.Append("\n");
         if (LateCommit)
         {
-            sb.Append("LateCommit ON");
-            sb.Append("\n");
+            sb.Append("LateCommit ON(delay:");
+            sb.Append(LateCommitDelay);
+            sb.Append("ms)\n");
         }
+        if (FastRate)
+        {
+            sb.Append("FastRate ON(");
+            sb.Append(FastRateScale);
+            sb.Append("X)\n");
+        }
+        
         sb.Append("Anti-Cheat:");
         if (Lockstep)
         {

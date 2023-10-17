@@ -142,9 +142,16 @@ public class Player
     {
         UpdatePos();
         
-        if (id == 1 && this.CollideWith(world[2]))
+        if (id == 1)
         {
-            hp = 0;
+            foreach (var player in world.playerDict.Values)
+            {
+                if (this.CollideWith(player))
+                {
+                    hp = 0;
+                    break;
+                }
+            }
         }
     }
 

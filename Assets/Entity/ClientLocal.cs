@@ -8,7 +8,7 @@ public class ClientLocal
 {
     public int id;
     public Dictionary<int, TimeSpan> pkg_sent_time = new();
-    public int ping;
+    public XPing ping = new();
     public World world = new();
     public Dictionary<int, Player.Instruction> unack_inst = new();
     public Player localPlayer;
@@ -46,7 +46,7 @@ public class ClientLocal
                 break;
             case NetworkPacket.Type.Ack:
                 int frame = (int)packet.content;
-                ping = (int)((MainModule.PastTime - pkg_sent_time[frame]) / 2).TotalMilliseconds;
+                ping.Add((MainModule.PastTime - pkg_sent_time[frame]).TotalMilliseconds);
                 pkg_sent_time.Remove(frame);
                 break;
             default:
@@ -114,7 +114,7 @@ public class ClientLocal
         sb.Append("client");
         sb.Append(id);
         sb.Append("\t ping:");
-        sb.Append(ping);
+        sb.Append(ping.Latest);
         sb.Append("\t local player:");
         sb.Append(localPlayer);
         sb.Append("\n");
