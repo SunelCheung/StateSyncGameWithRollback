@@ -23,7 +23,8 @@ public class MainModule: MonoBehaviour
     public bool PoorConnectionExist;
     public int BadOneWayLatency = 500;
     public bool FastRate;
-    public float FastRateScale = 1.4f;
+    public float FastRateScale = 1.5f;
+    public bool TrustClientPos;
     public int JitterMin; // one-way
     public int JitterMax; // one-way
     public GameObject[] Player;

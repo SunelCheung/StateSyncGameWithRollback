@@ -58,10 +58,6 @@ public class ClientLocal
     {
         var pastTime = Time.timeSinceLevelLoadAsDouble;
         var deltaTime = pastTime - lastUpdateTime;
-        if (id == 2 && MainModule.Instance.FastRate)
-        {
-            deltaTime *= MainModule.Instance.FastRateScale;
-        }
         lastUpdateTime += deltaTime;
         if (lastUpdateTime - curLogicTime >= MainModule.frameInterval)
         {
@@ -89,6 +85,10 @@ public class ClientLocal
         // if(id == 3 && currentFrame < 20)
         //     Debug.LogError($"{localPlayer.frame}-{localPlayer}");
         localPlayer.CopyFrom(world.playerDict[id]);
+        if (id == 2 && MainModule.Instance.FastRate)
+        {
+            localPlayer.speed *= MainModule.Instance.FastRateScale;
+        }
         
         for (int i = last_ack_frame; i < currentFrame; i++)
         {

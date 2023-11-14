@@ -9,14 +9,15 @@ public static class Manager
         if (src == dst)
             return;
         dst.direction = src.direction;
-        dst.shooting = src.shooting;
+        // dst.shooting = src.shooting;
+        dst.toPos = src.toPos;
     }
     
     public static Player.Instruction Duplicate(this Player.Instruction src)
     {
         if (src == null)
             return null;
-        if (src.direction == Direction.None && !src.shooting)
+        if (src.direction == Direction.None)// && !src.shooting)
         {
             return null;
         }
@@ -105,7 +106,8 @@ public class Player
     public class Instruction
     {
         public Direction direction = Direction.None;
-        public bool shooting;
+        // public bool shooting;
+        public Vector2 toPos;
 
         public static implicit operator bool(Instruction inst) => inst != null;
     }
@@ -136,6 +138,7 @@ public class Player
 
         inst ??= new Instruction();
         inst.direction = dir;
+        inst.toPos = calcToPos(pos, dir);
     }
     
     public void Update()
@@ -160,27 +163,30 @@ public class Player
         if (IsDead || !inst)
             return;
         // speed = Mathf.Clamp(speed, 0, speed_max);
-        switch (inst.direction)
+        pos = MainModule.Instance.TrustClientPos ? inst.toPos : calcToPos(pos, inst.direction);
+    }
+
+    private Vector2 calcToPos(Vector2 position, Direction dir)
+    {
+        switch (dir)
         {
             case Direction.Up:
-                pos.y += speed * MainModule.frameInterval;
+                position.y += speed * MainModule.frameInterval;
                 break;
             case Direction.Down:
-                pos.y -= speed * MainModule.frameInterval;
+                position.y -= speed * MainModule.frameInterval;
                 break;
             case Direction.Left:
-                pos.x -= speed * MainModule.frameInterval;
+                position.x -= speed * MainModule.frameInterval;
                 break;
             case Direction.Right:
-                pos.x += speed * MainModule.frameInterval;
-                break;
-            default:
-                // changed = false;
+                position.x += speed * MainModule.frameInterval;
                 break;
         }
 
-        pos.x = Mathf.Clamp(pos.x, x_min + radius, x_max - radius);
-        pos.y = Mathf.Clamp(pos.y, y_min + radius, y_max - radius);
+        position.x = Mathf.Clamp(position.x, x_min + radius, x_max - radius);
+        position.y = Mathf.Clamp(position.y, y_min + radius, y_max - radius);
+        return position;
     }
     
     public override string ToString()
